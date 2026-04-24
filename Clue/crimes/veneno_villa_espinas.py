@@ -37,6 +37,47 @@ def crear_kb() -> KnowledgeBase:
 
     # === YOUR CODE HERE ===
 
+    # reynaldo tiene las huellas en el frasco, que es el arma
+    kb.add_fact(Predicate("huellas_en", (reynaldo, frasco_arsenico)))
+    kb.add_fact(Predicate("arma_crimen", (frasco_arsenico,)))
+    # pablo y bernardo estaban afuera toda la noche, no pudieron acceder a la bodega
+    kb.add_fact(Predicate("lejos_de_escena", (pablo,)))
+    kb.add_fact(Predicate("lejos_de_escena", (bernardo,)))
+    kb.add_fact(Predicate("acusa", (pablo, reynaldo)))
+    # margot y reynaldo se dan coartada mutuamente pero ningun testigo independiente los avala
+    kb.add_fact(Predicate("da_coartada", (margot, reynaldo)))
+    kb.add_fact(Predicate("da_coartada", (reynaldo, margot)))
+    kb.add_fact(Predicate("sin_coartada_verificada", (reynaldo,)))
+
+    # si tienes huellas en el arma eso cuenta como evidencia directa
+    kb.add_rule(Rule(
+        head=Predicate("evidencia_directa", (Term("$X"),)),
+        body=(Predicate("huellas_en", (Term("$X"), Term("$W"))), Predicate("arma_crimen", (Term("$W"),))),
+    ))
+    kb.add_rule(Rule(
+        head=Predicate("descartado", (Term("$X"),)),
+        body=(Predicate("lejos_de_escena", (Term("$X"),)),),
+    ))
+    # si alguien esta descartado su testimonio es confiable
+    kb.add_rule(Rule(
+        head=Predicate("testimonio_confiable", (Term("$X"), Term("$Y"))),
+        body=(Predicate("descartado", (Term("$X"),)), Predicate("acusa", (Term("$X"), Term("$Y")))),
+    ))
+    # evidencia + sin coartada = culpable
+    kb.add_rule(Rule(
+        head=Predicate("culpable", (Term("$X"),)),
+        body=(Predicate("evidencia_directa", (Term("$X"),)), Predicate("sin_coartada_verificada", (Term("$X"),))),
+    ))
+    kb.add_rule(Rule(
+        head=Predicate("encubridor", (Term("$X"),)),
+        body=(Predicate("da_coartada", (Term("$X"), Term("$Y"))), Predicate("culpable", (Term("$Y"),))),
+    ))
+    # coartada cruzada: los dos se cubren entre si
+    kb.add_rule(Rule(
+        head=Predicate("coartada_cruzada", (Term("$X"), Term("$Y"))),
+        body=(Predicate("da_coartada", (Term("$X"), Term("$Y"))), Predicate("da_coartada", (Term("$Y"), Term("$X")))),
+    ))
+
     # === END YOUR CODE ===
 
     return kb
