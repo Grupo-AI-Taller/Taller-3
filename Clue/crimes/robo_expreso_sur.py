@@ -32,10 +32,47 @@ def crear_kb() -> KnowledgeBase:
     victor         = Term("victor")
     don_rodrigo    = Term("don_rodrigo")
     marquesa       = Term("marquesa")
-    estuche_joyas  = Term("estuche_joyas")
     vagon_equipaje = Term("vagon_equipaje")
 
     # === YOUR CODE HERE ===
+
+    kb.add_fact(Predicate("en_escena", (elena,)))
+    # don rodrigo estaba grabado en el otro extremo del tren, imposible que fuera el
+    kb.add_fact(Predicate("grabado_en_camara", (don_rodrigo, vagon_equipaje)))
+    kb.add_fact(Predicate("lugar_lejano", (vagon_equipaje,)))
+    # la marquesa es la victima directa, no tiene por que mentir
+    kb.add_fact(Predicate("victima", (marquesa,)))
+    kb.add_fact(Predicate("acusa", (marquesa, elena)))
+    # victor y elena se cubren mutuamente (sospechoso)
+    kb.add_fact(Predicate("da_coartada", (victor, elena)))
+    kb.add_fact(Predicate("da_coartada", (elena, victor)))
+
+    # grabado lejos = descartado
+    kb.add_rule(Rule(
+        head=Predicate("descartado", (Term("$X"),)),
+        body=(Predicate("grabado_en_camara", (Term("$X"), Term("$L"))), Predicate("lugar_lejano", (Term("$L"),))),
+    ))
+    kb.add_rule(Rule(
+        head=Predicate("testigo_imparcial", (Term("$X"),)),
+        body=(Predicate("victima", (Term("$X"),)),),
+    ))
+    kb.add_rule(Rule(
+        head=Predicate("acusacion_creible", (Term("$X"), Term("$Y"))),
+        body=(Predicate("testigo_imparcial", (Term("$X"),)), Predicate("acusa", (Term("$X"), Term("$Y")))),
+    ))
+    # si estabas en la escena y la victima te acusa, eres culpable
+    kb.add_rule(Rule(
+        head=Predicate("culpable", (Term("$X"),)),
+        body=(Predicate("en_escena", (Term("$X"),)), Predicate("acusacion_creible", (Term("$Y"), Term("$X")))),
+    ))
+    kb.add_rule(Rule(
+        head=Predicate("defiende_al_culpable", (Term("$X"),)),
+        body=(Predicate("da_coartada", (Term("$X"), Term("$Y"))), Predicate("culpable", (Term("$Y"),))),
+    ))
+    kb.add_rule(Rule(
+        head=Predicate("alianza_coartadas", (Term("$X"), Term("$Y"))),
+        body=(Predicate("da_coartada", (Term("$X"), Term("$Y"))), Predicate("da_coartada", (Term("$Y"), Term("$X")))),
+    ))
 
     # === END YOUR CODE ===
 
